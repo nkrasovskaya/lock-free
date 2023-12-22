@@ -15,3 +15,6 @@ set(SOURCES_lock-thread-pool
 
 add_executable(lock-thread-pool ${SOURCES_lock-thread-pool})
 
+enable_testing()
+add_subdirectory(tests)
+
