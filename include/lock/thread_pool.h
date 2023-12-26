@@ -4,8 +4,9 @@
 #include <atomic>
 #include <condition_variable>
 #include <functional>
-#include <queue>
 #include <thread>
+
+#include "ring_buffer.h"
 
 namespace locks {
 
@@ -17,8 +18,8 @@ class ThreadPool {
   void addTask(F &&f, Args &&...args) {
     {
       std::unique_lock<std::mutex> lock(mutex_);
-      tasks_.emplace([f = std::forward<F>(f),
-                      args = std::make_tuple(std::forward<Args>(args)...)] {
+      tasks_.push([f = std::forward<F>(f),
+                   args = std::make_tuple(std::forward<Args>(args)...)] {
         std::apply(f, args);
       });
     }
@@ -31,7 +32,7 @@ class ThreadPool {
 
  private:
   std::vector<std::thread> threads_;
-  std::queue<std::function<void()>> tasks_;
+  locks::RingBuffer<std::function<void()>, 128> tasks_;
   std::mutex mutex_;
   std::condition_variable condition_;
   std::atomic_bool need_stop_;
