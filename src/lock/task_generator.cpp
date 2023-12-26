@@ -7,13 +7,18 @@
 
 namespace {
 double integrate(double a, double b) {
-  const int N = 1000000;
+  const int min = 100000;
+  const int max = 1000000;
+  const int N = min + (rand() % static_cast<int>(max - min + 1));
+
   double h = (b - a) / N;
   double sum = (sin(a) + sin(b)) / 2.0;
+
   for (int i = 1; i < N; ++i) {
     double x = a + i * h;
     sum += sin(x);
   }
+
   return sum * h;
 }
 }  // namespace
