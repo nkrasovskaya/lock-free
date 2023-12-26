@@ -2,6 +2,7 @@
 
 #include "lock/task_generator.h"
 #include "lock/thread_pool.h"
+#include "lock/logger.h"
 
 template <class T>
 concept HasStopMethod = requires(T a) { a.stop(); };
@@ -29,9 +30,11 @@ class StopOnPressEnter final {
 int main() {
   const size_t numThreads = 10;
   locks::ThreadPool threadPool(numThreads);
-  locks::TaskGenerator taskGenerator(threadPool);
+  locks::Logger logger(new locks::FileLogAppender("./test.log"));
+  locks::TaskGenerator taskGenerator(threadPool, logger);
   StopOnPressEnter<locks::TaskGenerator> se(
       std::forward<locks::TaskGenerator &>(taskGenerator));
+  logger.run();
   taskGenerator.run();
   return 0;
 }

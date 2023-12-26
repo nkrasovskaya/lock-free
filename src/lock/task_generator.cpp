@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream>
 
+#include "lock/logger.h"
 #include "lock/thread_pool.h"
 
 namespace {
@@ -25,16 +26,31 @@ double integrate(double a, double b) {
 
 namespace locks {
 
-TaskGenerator::TaskGenerator(ThreadPool &threadPool)
-    : thread_pool_(threadPool), task_counter_(0), need_stop_(false) {}
+TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger)
+    : thread_pool_(threadPool),
+      logger_(logger),
+      task_counter_(0),
+      need_stop_(false) {}
 
 void TaskGenerator::run() {
   while (true) {
     double a = static_cast<double>(rand()) / RAND_MAX;
     double b = static_cast<double>(rand()) / RAND_MAX;
     thread_pool_.addTask([this, a, b] {
+      auto ts = std::chrono::high_resolution_clock::now();
       double result = integrate(a, b);
-      std::cout << "result: " << result << std::endl;
+      auto te = std::chrono::high_resolution_clock::now();
+
+      std::chrono::duration<double, std::milli> ms_double = te - ts;
+
+      std::unique_ptr<LogMessage> log_message(new LogMessage);
+      log_message->set_time();
+      log_message->fname = __FILE__;
+      log_message->line_num = __LINE__;
+      log_message->smsg << "a: " << a << ", b: " << b << ", result: " << result
+                        << ", execution time: " << ms_double;
+
+      logger_.addMessage(std::move(log_message));
       ++task_counter_;
     });
 
@@ -42,6 +58,7 @@ void TaskGenerator::run() {
 
     if (need_stop_) {
       thread_pool_.stop();
+      logger_.stop();
       break;
     }
   }

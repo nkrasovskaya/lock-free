@@ -6,10 +6,11 @@
 namespace locks {
 
 class ThreadPool;
+class Logger;
 
 class TaskGenerator {
  public:
-  TaskGenerator(ThreadPool &threadPool);
+  TaskGenerator(ThreadPool &threadPool, Logger &logger);
 
   TaskGenerator(const TaskGenerator &) = delete;
 
@@ -19,6 +20,7 @@ class TaskGenerator {
 
  private:
   ThreadPool &thread_pool_;
+  locks::Logger &logger_;
   std::atomic_int task_counter_;
   std::atomic_bool need_stop_;
 

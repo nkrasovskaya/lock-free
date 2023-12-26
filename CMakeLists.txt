@@ -9,6 +9,7 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++-12)
 include_directories(include/)
 
 set(SOURCES_lock-thread-pool
+  src/lock/logger.cpp
   src/lock/main.cpp
   src/lock/task_generator.cpp
   src/lock/thread_pool.cpp)
