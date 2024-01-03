@@ -16,6 +16,13 @@ set(SOURCES_lock-thread-pool
 
 add_executable(lock-thread-pool ${SOURCES_lock-thread-pool})
 
+set(SOURCES_lock-free-thread-pool
+src/lock-free/logger.cpp
+src/lock-free/main.cpp
+src/lock-free/task_generator.cpp
+src/lock-free/thread_pool.cpp)
+add_executable(lock-free-thread-pool ${SOURCES_lock-free-thread-pool})
+
 enable_testing()
 add_subdirectory(tests)
 
