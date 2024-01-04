@@ -5,29 +5,6 @@
 #include "lock/task_generator.h"
 #include "lock/thread_pool.h"
 
-template <class T>
-concept HasStopMethod = requires(T a) { a.stop(); };
-
-template <HasStopMethod T>
-class StopOnPressEnter final {
- public:
-  StopOnPressEnter(T &runner) {
-    t = std::move(std::thread([&runner] {
-      while (true) {
-        if (std::cin.get() == '\n') {
-          runner.stop();
-          break;
-        }
-      }
-    }));
-  }
-
-  ~StopOnPressEnter() { t.join(); }
-
- private:
-  std::thread t;
-};
-
 int main(int argc, char *argv[]) {
   Config config;
   if (argc <= 1) {
@@ -55,9 +32,12 @@ int main(int argc, char *argv[]) {
                        config.GetLogBufferSize());
   locks::TaskGenerator taskGenerator(threadPool, logger);
 
-  StopOnPressEnter<locks::TaskGenerator> se(
-      std::forward<locks::TaskGenerator &>(taskGenerator));
+  while (true) {
+    if (std::cin.get() == '\n') {
+      taskGenerator.stop();
+      break;
+    }
+  }
 
-  taskGenerator.run();
   return 0;
 }

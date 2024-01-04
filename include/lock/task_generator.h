@@ -2,6 +2,7 @@
 #define LOCK_TASK_GENERATOR_H
 
 #include <atomic>
+#include <thread>
 
 namespace locks {
 
@@ -14,15 +15,18 @@ class TaskGenerator {
 
   TaskGenerator(const TaskGenerator &) = delete;
 
-  void run();
+  ~TaskGenerator();
 
   void stop() { need_stop_ = true; }
 
  private:
   ThreadPool &thread_pool_;
   locks::Logger &logger_;
+
   std::atomic_int task_counter_;
+
   std::atomic_bool need_stop_;
+  std::thread thread;
 
   void printCounter();
 };
