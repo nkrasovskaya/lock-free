@@ -7,13 +7,13 @@ struct A {
 };
 
 TEST(Config, RingBufferEmpty) {
-  locks::RingBuffer<A, 5> buf;
+  locks::RingBuffer<A> buf(5);
   EXPECT_TRUE(buf.empty());
   EXPECT_FALSE(buf.full());
 }
 
 TEST(Config, RingBufferAddElements) {
-  locks::RingBuffer<A, 5> buf;
+  locks::RingBuffer<A> buf(5);
   EXPECT_TRUE(buf.push(A({1})));
 
   EXPECT_FALSE(buf.empty());
@@ -32,7 +32,7 @@ TEST(Config, RingBufferAddElements) {
 }
 
 TEST(Config, RingBufferFull1) {
-  locks::RingBuffer<A, 5> buf;
+  locks::RingBuffer<A> buf(5);
   for (int i : {1, 2, 3, 4, 5}) {
     EXPECT_TRUE(buf.push(A({i})));
   }
@@ -44,7 +44,7 @@ TEST(Config, RingBufferFull1) {
 }
 
 TEST(Config, RingBufferFull2) {
-  locks::RingBuffer<A, 5> buf;
+  locks::RingBuffer<A> buf(5);
   for (int i : {1, 2, 3, 4, 5}) {
     EXPECT_TRUE(buf.push(A({i})));
   }
@@ -61,7 +61,7 @@ TEST(Config, RingBufferFull2) {
 }
 
 TEST(Config, RingBufferPushToFull) {
-  locks::RingBuffer<A, 5> buf;
+  locks::RingBuffer<A> buf(5);
   for (int i : {1, 2, 3, 4, 5}) {
     EXPECT_TRUE(buf.push(A({i})));
   }
@@ -70,14 +70,14 @@ TEST(Config, RingBufferPushToFull) {
 }
 
 TEST(Config, RingBufferPopFromEmpty) {
-  locks::RingBuffer<A, 5> buf;
+  locks::RingBuffer<A> buf(5);
 
   A a;
   EXPECT_FALSE(buf.pop(a));
 }
 
 TEST(Config, RingBufferPopElements) {
-  locks::RingBuffer<A, 5> buf;
+  locks::RingBuffer<A> buf(5);
   for (int i : {1, 2, 3}) {
     buf.push(A({i}));
   }

@@ -52,7 +52,7 @@ class FileLogAppender final : public LogAppender {
 
 class Logger {
  public:
-  Logger(LogAppender* helper);
+  Logger(LogAppender* helper, size_t buff_size);
   ~Logger();
 
   bool addMessage(std::unique_ptr<LogMessage>&& msg);
@@ -62,9 +62,10 @@ class Logger {
 
  private:
   std::unique_ptr<LogAppender> helper_;
-  RingBuffer<std::unique_ptr<LogMessage>, 128> buffer_;
+  RingBuffer<std::unique_ptr<LogMessage>> buffer_;
+
   std::atomic_bool need_stop_;
-  std::thread t;
+  std::thread thread;
 };
 }  // namespace lock_free
 

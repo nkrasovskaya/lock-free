@@ -10,8 +10,8 @@ namespace {
 std::string serializeLogMeassage(const locks::LogMessage &msg) {
   std::ostringstream record_stream;
   record_stream << std::put_time(std::localtime(&msg.time), "%Y-%m-%d %H:%M:%S")
-                << "  " << msg.fname << ":" << msg.line_num << " " << msg.smsg.str()
-                << std::endl;
+                << "  " << msg.fname << ":" << msg.line_num << " "
+                << msg.smsg.str() << std::endl;
 
   return record_stream.str();
 }
@@ -19,7 +19,8 @@ std::string serializeLogMeassage(const locks::LogMessage &msg) {
 
 namespace locks {
 
-FileLogAppender::FileLogAppender(std::string file_path) : log_file_(file_path) {}
+FileLogAppender::FileLogAppender(std::string file_path)
+    : log_file_(file_path) {}
 FileLogAppender::~FileLogAppender() {
   log_file_.flush();
   log_file_.close();
@@ -30,7 +31,8 @@ bool FileLogAppender::write(std::string msg) {
   return true;
 }
 
-Logger::Logger(LogAppender *helper) : helper_(helper), need_stop_(false) {}
+Logger::Logger(LogAppender *helper, size_t buff_size)
+    : helper_(helper), buffer_(buff_size), need_stop_(false) {}
 
 void Logger::stop() {
   if (!need_stop_) {

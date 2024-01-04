@@ -1,19 +1,21 @@
 #ifndef LOCK_RING_BUFFER_H
 #define LOCK_RING_BUFFER_H
 
-#include <array>
 #include <atomic>
+#include <vector>
 
 namespace locks {
 
-template <typename T, size_t buffer_size = 128>
+template <typename T>
 class RingBuffer {
  public:
-  RingBuffer() : head_idx_(0), tail_idx_(0), is_empty_(true) {}
+  RingBuffer(size_t buff_size) : head_idx_(0), tail_idx_(0), is_empty_(true) {
+    buffer_.resize(buff_size);
+  }
 
   bool empty() const { return is_empty_; }
 
-  bool full() const { return (tail_idx_ + 1) % buffer_size == head_idx_; }
+  bool full() const { return (tail_idx_ + 1) % buffer_.size() == head_idx_; }
 
   size_t getHeadIdx() const { return head_idx_; }
   size_t getTailIdx() const { return tail_idx_; }
@@ -27,7 +29,7 @@ class RingBuffer {
       tail_idx_ = 0;
       is_empty_ = false;
     } else {
-      tail_idx_ = (tail_idx_ + 1) % buffer_size;
+      tail_idx_ = (tail_idx_ + 1) % buffer_.size();
     }
     buffer_[tail_idx_] = std::move(data);
 
@@ -43,7 +45,7 @@ class RingBuffer {
       // last element
       is_empty_ = true;
     } else {
-      head_idx_ = (head_idx_ + 1) % buffer_size;
+      head_idx_ = (head_idx_ + 1) % buffer_.size();
     }
     return true;
   }
@@ -53,7 +55,7 @@ class RingBuffer {
   std::atomic_size_t tail_idx_;
   std::atomic_bool is_empty_;
 
-  std::array<T, buffer_size> buffer_;
+  std::vector<T> buffer_;
 };
 
 }  // namespace locks

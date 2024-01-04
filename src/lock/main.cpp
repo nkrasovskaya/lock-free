@@ -49,11 +49,15 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  locks::ThreadPool threadPool(config.GetThreadsNumber());
-  locks::Logger logger(new locks::FileLogAppender(config.GetLogFilePath()));
+  locks::ThreadPool threadPool(config.GetThreadsNumber(),
+                               config.GetTasksBufferSize());
+  locks::Logger logger(new locks::FileLogAppender(config.GetLogFilePath()),
+                       config.GetLogBufferSize());
   locks::TaskGenerator taskGenerator(threadPool, logger);
+
   StopOnPressEnter<locks::TaskGenerator> se(
       std::forward<locks::TaskGenerator &>(taskGenerator));
+
   logger.run();
   taskGenerator.run();
   return 0;

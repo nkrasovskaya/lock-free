@@ -12,7 +12,7 @@ namespace lock_free {
 
 class ThreadPool {
  public:
-  ThreadPool(size_t numThreads);
+  ThreadPool(size_t numThreads, size_t buff_size);
 
   template <class F, class... Args>
   void addTask(F &&f, Args &&...args) {
@@ -30,7 +30,8 @@ class ThreadPool {
 
  private:
   std::vector<std::thread> threads_;
-  RingBuffer<std::function<void()>, 128> tasks_;
+  RingBuffer<std::function<void()>> tasks_;
+
   std::atomic_bool need_stop_;
 };
 

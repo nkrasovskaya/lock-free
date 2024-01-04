@@ -49,11 +49,16 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  lock_free::ThreadPool threadPool(config.GetThreadsNumber());
-  lock_free::Logger logger(new lock_free::FileLogAppender(config.GetLogFilePath()));
+  lock_free::ThreadPool threadPool(config.GetThreadsNumber(),
+                                   config.GetTasksBufferSize());
+  lock_free::Logger logger(
+      new lock_free::FileLogAppender(config.GetLogFilePath()),
+      config.GetLogBufferSize());
   lock_free::TaskGenerator taskGenerator(threadPool, logger);
+
   StopOnPressEnter<lock_free::TaskGenerator> se(
       std::forward<lock_free::TaskGenerator &>(taskGenerator));
+
   logger.run();
   taskGenerator.run();
   return 0;

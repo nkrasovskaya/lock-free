@@ -32,7 +32,8 @@ bool FileLogAppender::write(std::string msg) {
   return true;
 }
 
-Logger::Logger(LogAppender *helper) : helper_(helper), need_stop_(false) {}
+Logger::Logger(LogAppender *helper, size_t buff_size)
+    : helper_(helper), buffer_(buff_size), need_stop_(false) {}
 
 void Logger::stop() {
   if (!need_stop_) {
@@ -53,7 +54,7 @@ Logger::~Logger() {
     stop();
   }
 
-  t.join();
+  thread.join();
 }
 
 bool Logger::addMessage(std::unique_ptr<LogMessage> &&msg) {
@@ -63,7 +64,7 @@ bool Logger::addMessage(std::unique_ptr<LogMessage> &&msg) {
 
 // move to constructor
 void Logger::run() {
-  t = std::move(std::thread([this] {
+  thread = std::move(std::thread([this] {
     std::unique_ptr<LogMessage> msg;
     while (true) {
       if (need_stop_) {

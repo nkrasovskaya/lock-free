@@ -1,19 +1,18 @@
 #ifndef LOCK_FREE_RING_BUFFER_H
 #define LOCK_FREE_RING_BUFFER_H
 
-#include <array>
 #include <atomic>
+#include <vector>
 
 namespace lock_free {
 
-template <typename T, size_t buffer_size = 128>
+template <typename T>
 class RingBuffer {
  public:
-  RingBuffer()
-      : head_idx_(0),
-        tail_idx_(0),
-        used_(0),
-        free_(buffer_size) {}
+  RingBuffer(size_t buff_size)
+      : head_idx_(0), tail_idx_(0), used_(0), free_(buff_size) {
+    buffer_.resize(buff_size);
+  }
 
   size_t acquireWrite() {
     while (true) {
@@ -22,7 +21,7 @@ class RingBuffer {
         // spin until success
       }
 
-      size_t new_tail = (old_tail + 1) % buffer_size;
+      size_t new_tail = (old_tail + 1) % buffer_.size();
       free_--;
       if (tail_idx_.compare_exchange_strong(old_tail, new_tail)) {
         return old_tail;
@@ -31,14 +30,14 @@ class RingBuffer {
     }
   }
 
-    size_t tryAcquireWrite() {
+  size_t tryAcquireWrite() {
     while (true) {
       auto old_tail = tail_idx_.load(std::memory_order_consume);
       if (free_.load(std::memory_order_consume) < 1) {
-        return buffer_size + 1;
+        return buffer_.size() + 1;
       }
 
-      size_t new_tail = (old_tail + 1) % buffer_size;
+      size_t new_tail = (old_tail + 1) % buffer_.size();
       free_--;
       if (tail_idx_.compare_exchange_strong(old_tail, new_tail)) {
         return old_tail;
@@ -51,18 +50,18 @@ class RingBuffer {
 
   bool push(T&& data) {
     size_t widx = acquireWrite();
-    buffer_[widx % buffer_size] = std::move(data);
+    buffer_[widx % buffer_.size()] = std::move(data);
     releaseWrite();
     return true;
   }
 
   bool tryPush(T&& data) {
     size_t widx = tryAcquireWrite();
-    if (widx > buffer_size) {
+    if (widx > buffer_.size()) {
       return false;
     }
 
-    buffer_[widx % buffer_size] = std::move(data);
+    buffer_[widx % buffer_.size()] = std::move(data);
     releaseWrite();
     return true;
   }
@@ -74,7 +73,7 @@ class RingBuffer {
         // spin until success
       }
 
-      size_t new_head = (old_head + 1) % buffer_size;
+      size_t new_head = (old_head + 1) % buffer_.size();
       used_--;
       if (head_idx_.compare_exchange_strong(old_head, new_head))
         return old_head;
@@ -87,10 +86,10 @@ class RingBuffer {
     while (true) {
       auto old_head = head_idx_.load(std::memory_order_consume);
       if (used_.load(std::memory_order_consume) < 1) {
-        return buffer_size + 1;
+        return buffer_.size() + 1;
       }
 
-      size_t new_head = (old_head + 1) % buffer_size;
+      size_t new_head = (old_head + 1) % buffer_.size();
       used_--;
       if (head_idx_.compare_exchange_strong(old_head, new_head))
         return old_head;
@@ -111,7 +110,7 @@ class RingBuffer {
 
   bool tryPop(T& data) {
     size_t widx = tryAcquireRead();
-    if (widx > buffer_size) {
+    if (widx > buffer_.size()) {
       return false;
     }
 
@@ -128,7 +127,7 @@ class RingBuffer {
   std::atomic_int used_;
   std::atomic_int free_;
 
-  std::array<T, buffer_size> buffer_;
+  std::vector<T> buffer_;
 };
 
 }  // namespace lock_free
