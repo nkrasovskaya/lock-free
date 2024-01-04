@@ -59,7 +59,6 @@ int main(int argc, char *argv[]) {
   StopOnPressEnter<lock_free::TaskGenerator> se(
       std::forward<lock_free::TaskGenerator &>(taskGenerator));
 
-  logger.run();
   taskGenerator.run();
   return 0;
 }

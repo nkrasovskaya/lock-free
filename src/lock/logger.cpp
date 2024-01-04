@@ -32,7 +32,25 @@ bool FileLogAppender::write(std::string msg) {
 }
 
 Logger::Logger(LogAppender *helper, size_t buff_size)
-    : helper_(helper), buffer_(buff_size), need_stop_(false) {}
+    : helper_(helper), buffer_(buff_size), need_stop_(false) {
+      thread = std::move(std::thread([this] {
+    std::unique_ptr<LogMessage> msg;
+    while (true) {
+      {
+        std::unique_lock<std::mutex> lock(buff_lock_);
+        buff_is_not_empty_condition_.wait(lock, [this] {
+          return std::forward<bool>(need_stop_) || !buffer_.empty();
+        });
+        if (need_stop_ && buffer_.empty()) {
+          return;
+        }
+        buffer_.pop(msg);
+      }
+      buff_is_not_full_condition_.notify_one();
+      helper_->write(serializeLogMeassage(*msg));
+    }
+  }));
+    }
 
 void Logger::stop() {
   if (!need_stop_) {
@@ -65,24 +83,4 @@ bool Logger::addMessage(std::unique_ptr<LogMessage> &&msg) {
   return true;
 }
 
-// move to constructor
-void Logger::run() {
-  thread = std::move(std::thread([this] {
-    std::unique_ptr<LogMessage> msg;
-    while (true) {
-      {
-        std::unique_lock<std::mutex> lock(buff_lock_);
-        buff_is_not_empty_condition_.wait(lock, [this] {
-          return std::forward<bool>(need_stop_) || !buffer_.empty();
-        });
-        if (need_stop_ && buffer_.empty()) {
-          return;
-        }
-        buffer_.pop(msg);
-      }
-      buff_is_not_full_condition_.notify_one();
-      helper_->write(serializeLogMeassage(*msg));
-    }
-  }));
-}
 }  // namespace locks

@@ -33,7 +33,18 @@ bool FileLogAppender::write(std::string msg) {
 }
 
 Logger::Logger(LogAppender *helper, size_t buff_size)
-    : helper_(helper), buffer_(buff_size), need_stop_(false) {}
+    : helper_(helper), buffer_(buff_size), need_stop_(false) {
+  thread = std::move(std::thread([this] {
+    std::unique_ptr<LogMessage> msg;
+    while (true) {
+      if (need_stop_) {
+        return;
+      }
+      buffer_.pop(msg);
+      helper_->write(serializeLogMeassage(*msg));
+    }
+  }));
+}
 
 void Logger::stop() {
   if (!need_stop_) {
@@ -62,17 +73,4 @@ bool Logger::addMessage(std::unique_ptr<LogMessage> &&msg) {
   return true;
 }
 
-// move to constructor
-void Logger::run() {
-  thread = std::move(std::thread([this] {
-    std::unique_ptr<LogMessage> msg;
-    while (true) {
-      if (need_stop_) {
-        return;
-      }
-      buffer_.pop(msg);
-      helper_->write(serializeLogMeassage(*msg));
-    }
-  }));
-}
 }  // namespace lock_free

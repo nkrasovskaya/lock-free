@@ -56,7 +56,6 @@ class Logger {
   ~Logger();
 
   bool addMessage(std::unique_ptr<LogMessage>&& msg);
-  void run();
 
   void stop();
 
