@@ -19,7 +19,9 @@ std::string serializeLogMeassage(const lock_free::LogMessage &msg) {
 
 namespace lock_free {
 
-FileLogAppender::FileLogAppender(std::string file_path) : log_file_(file_path) {}
+FileLogAppender::FileLogAppender(std::string file_path)
+    : log_file_(file_path) {}
+
 FileLogAppender::~FileLogAppender() {
   log_file_.flush();
   log_file_.close();
@@ -35,6 +37,14 @@ Logger::Logger(LogAppender *helper) : helper_(helper), need_stop_(false) {}
 void Logger::stop() {
   if (!need_stop_) {
     need_stop_ = true;
+
+    // Add fake message to exit from read loop
+    std::unique_ptr<LogMessage> log_message(new LogMessage);
+    log_message->set_time();
+    log_message->fname = __FILE__;
+    log_message->line_num = __LINE__;
+    log_message->smsg << "Stopping logger...";
+    addMessage(std::move(log_message));
   }
 }
 
@@ -47,12 +57,7 @@ Logger::~Logger() {
 }
 
 bool Logger::addMessage(std::unique_ptr<LogMessage> &&msg) {
-  {
-    if (need_stop_) {
-      return true;
-    }
-    buffer_.push(std::move(msg));
-  }
+  buffer_.push(std::move(msg));
   return true;
 }
 
@@ -61,7 +66,7 @@ void Logger::run() {
   t = std::move(std::thread([this] {
     std::unique_ptr<LogMessage> msg;
     while (true) {
-      if (need_stop_ /* && tasks.empty()*/) {
+      if (need_stop_) {
         return;
       }
       buffer_.pop(msg);

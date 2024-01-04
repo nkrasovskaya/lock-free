@@ -7,11 +7,10 @@ ThreadPool::ThreadPool(size_t numThreads) : need_stop_(false) {
     threads_.emplace_back([this, i] {
       while (true) {
         std::function<void()> task;
-        {
-          if (need_stop_ /* && tasks.empty()*/) {
+        while (!tasks_.tryPop(task)) {
+          if (need_stop_) {
             return;
           }
-          tasks_.pop(task);
         }
         task();
       }
