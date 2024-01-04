@@ -1,8 +1,9 @@
 #include <iostream>
 
+#include "config.h"
+#include "lock/logger.h"
 #include "lock/task_generator.h"
 #include "lock/thread_pool.h"
-#include "lock/logger.h"
 
 template <class T>
 concept HasStopMethod = requires(T a) { a.stop(); };
@@ -27,10 +28,29 @@ class StopOnPressEnter final {
   std::thread t;
 };
 
-int main() {
-  const size_t numThreads = 10;
-  locks::ThreadPool threadPool(numThreads);
-  locks::Logger logger(new locks::FileLogAppender("./test.log"));
+int main(int argc, char *argv[]) {
+  Config config;
+  if (argc <= 1) {
+    std::cout << "No config file. Use default variables" << std::endl;
+  } else {
+    std::ifstream is(argv[1]);
+    if (!is.good()) {
+      std::cerr << "Can't open configuration file" << std::endl;
+      return 1;
+    }
+    try {
+      config.Parse(&is);
+    } catch (std::exception &e) {
+      std::cerr << "Can't load configuration file: " << e.what() << std::endl;
+      return 1;
+    } catch (...) {
+      std::cerr << "Can't load configuration file: unknown error" << std::endl;
+      return 1;
+    }
+  }
+
+  locks::ThreadPool threadPool(config.GetThreadsNumber());
+  locks::Logger logger(new locks::FileLogAppender(config.GetLogFilePath()));
   locks::TaskGenerator taskGenerator(threadPool, logger);
   StopOnPressEnter<locks::TaskGenerator> se(
       std::forward<locks::TaskGenerator &>(taskGenerator));

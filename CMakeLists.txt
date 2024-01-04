@@ -6,9 +6,10 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_C_COMPILER /usr/bin/gcc-12)
 set(CMAKE_CXX_COMPILER /usr/bin/g++-12)
 
-include_directories(include/)
+include_directories(include/ 3rd_party/include/)
 
 set(SOURCES_lock-thread-pool
+  src/config.cpp
   src/lock/logger.cpp
   src/lock/main.cpp
   src/lock/task_generator.cpp
@@ -17,6 +18,7 @@ set(SOURCES_lock-thread-pool
 add_executable(lock-thread-pool ${SOURCES_lock-thread-pool})
 
 set(SOURCES_lock-free-thread-pool
+src/config.cpp
 src/lock-free/logger.cpp
 src/lock-free/main.cpp
 src/lock-free/task_generator.cpp
