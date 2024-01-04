@@ -73,7 +73,7 @@ void Logger::run() {
         buff_is_not_empty_condition_.wait(lock, [this] {
           return std::forward<bool>(need_stop_) || !buffer_.empty();
         });
-        if (need_stop_ /* && tasks.empty()*/) {
+        if (need_stop_ && buffer_.empty()) {
           return;
         }
         buffer_.pop(msg);
