@@ -24,16 +24,20 @@ double integrate(double a, double b) {
 }
 }  // namespace
 
-TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger)
+TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger,
+                             size_t tasks_num)
     : thread_pool_(threadPool),
       logger_(logger),
       task_counter_(0),
       need_stop_(false) {
-  thread = std::move(std::thread([this] {
-    while (true) {
+  thread = std::move(std::thread([this, tasks_num] {
+    for (size_t i = 0;
+         i < (tasks_num == 0 ? std::numeric_limits<size_t>::max() : tasks_num);
+         ++i) {
       double a = static_cast<double>(rand()) / RAND_MAX;
       double b = static_cast<double>(rand()) / RAND_MAX;
       thread_pool_.addTask([this, a, b] {
+        ++task_counter_;
         auto ts = std::chrono::high_resolution_clock::now();
         double result = integrate(a, b);
         auto te = std::chrono::high_resolution_clock::now();
@@ -49,7 +53,6 @@ TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger)
                           << ", execution time: " << ms_double;
 
         logger_.addMessage(std::move(log_message));
-        ++task_counter_;
       });
 
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -60,17 +63,12 @@ TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger)
         break;
       }
     }
-
-    printCounter();
   }));
 }
 
 TaskGenerator::~TaskGenerator() {
-  if (!need_stop_) {
-    stop();
-  }
-
   thread.join();
+  printCounter();
 }
 
 void TaskGenerator::printCounter() {

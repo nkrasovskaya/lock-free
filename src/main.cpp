@@ -35,12 +35,14 @@ int main(int argc, char *argv[]) {
   ThreadPool threadPool(config.GetThreadsNumber(), config.GetTasksBufferSize());
   Logger logger(new FileLogAppender(config.GetLogFilePath()),
                 config.GetLogBufferSize());
-  TaskGenerator taskGenerator(threadPool, logger);
+  TaskGenerator taskGenerator(threadPool, logger, config.GetTasksNumber());
 
-  while (true) {
-    if (std::cin.get() == '\n') {
-      taskGenerator.stop();
-      break;
+  if (config.GetTasksNumber() == 0) {
+    while (true) {
+      if (std::cin.get() == '\n') {
+        taskGenerator.stop();
+        break;
+      }
     }
   }
 

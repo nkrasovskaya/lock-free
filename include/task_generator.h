@@ -9,7 +9,7 @@ class Logger;
 
 class TaskGenerator {
  public:
-  TaskGenerator(ThreadPool &threadPool, Logger &logger);
+  TaskGenerator(ThreadPool &threadPool, Logger &logger, size_t tasks_num);
 
   TaskGenerator(const TaskGenerator &) = delete;
 
