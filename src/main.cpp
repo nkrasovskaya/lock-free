@@ -39,19 +39,27 @@ int main(int argc, char *argv[]) {
   std::cout << "Tasks number: " << config.GetTasksNumber() << std::endl;
   std::cout << "Log file path: " << config.GetLogFilePath() << std::endl;
 
-  ThreadPool threadPool(config.GetThreadsNumber(), config.GetTasksBufferSize());
-  Logger logger(new FileLogAppender(config.GetLogFilePath()),
-                config.GetLogBufferSize());
-  TaskGenerator taskGenerator(threadPool, logger, config.GetTasksNumber());
+  auto ts = std::chrono::high_resolution_clock::now();
+  {
+    ThreadPool threadPool(config.GetThreadsNumber(),
+                          config.GetTasksBufferSize());
+    Logger logger(new FileLogAppender(config.GetLogFilePath()),
+                  config.GetLogBufferSize());
+    TaskGenerator taskGenerator(threadPool, logger, config.GetTasksNumber());
 
-  if (config.GetTasksNumber() == 0) {
-    while (true) {
-      if (std::cin.get() == '\n') {
-        taskGenerator.stop();
-        break;
+    if (config.GetTasksNumber() == 0) {
+      while (true) {
+        if (std::cin.get() == '\n') {
+          taskGenerator.stop();
+          break;
+        }
       }
     }
   }
+
+  auto te = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> ms_double = te - ts;
+  std::cout << "Execution time: " << ms_double << std::endl;
 
   return 0;
 }
