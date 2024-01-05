@@ -1,10 +1,10 @@
-#include "lock/task_generator.h"
+#include "task_generator.h"
 
 #include <cmath>
 #include <iostream>
 
-#include "lock/logger.h"
-#include "lock/thread_pool.h"
+#include "logger.h"
+#include "thread_pool.h"
 
 namespace {
 double integrate(double a, double b) {
@@ -23,8 +23,6 @@ double integrate(double a, double b) {
   return sum * h;
 }
 }  // namespace
-
-namespace locks {
 
 TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger)
     : thread_pool_(threadPool),
@@ -78,5 +76,3 @@ TaskGenerator::~TaskGenerator() {
 void TaskGenerator::printCounter() {
   std::cout << "Tasks number: " << task_counter_ << std::endl;
 }
-
-}  // namespace locks

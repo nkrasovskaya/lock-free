@@ -1,10 +1,8 @@
-#ifndef LOCK_TASK_GENERATOR_H
-#define LOCK_TASK_GENERATOR_H
+#ifndef TASK_GENERATOR_H
+#define TASK_GENERATOR_H
 
 #include <atomic>
 #include <thread>
-
-namespace locks {
 
 class ThreadPool;
 class Logger;
@@ -21,7 +19,7 @@ class TaskGenerator {
 
  private:
   ThreadPool &thread_pool_;
-  locks::Logger &logger_;
+  Logger &logger_;
 
   std::atomic_int task_counter_;
 
@@ -31,6 +29,4 @@ class TaskGenerator {
   void printCounter();
 };
 
-}  // namespace locks
-
-#endif  // LOCK_TASK_GENERATOR_H
+#endif  // TASK_GENERATOR_H

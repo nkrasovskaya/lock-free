@@ -8,22 +8,18 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++-12)
 
 include_directories(include/ 3rd_party/include/)
 
-set(SOURCES_lock-thread-pool
+set(SOURCES
   src/config.cpp
-  src/lock/logger.cpp
-  src/lock/main.cpp
-  src/lock/task_generator.cpp
-  src/lock/thread_pool.cpp)
+  src/logger.cpp
+  src/main.cpp
+  src/task_generator.cpp
+  src/thread_pool.cpp)
 
-add_executable(lock-thread-pool ${SOURCES_lock-thread-pool})
+add_executable(lock-thread-pool ${SOURCES})
 
-set(SOURCES_lock-free-thread-pool
-src/config.cpp
-src/lock-free/logger.cpp
-src/lock-free/main.cpp
-src/lock-free/task_generator.cpp
-src/lock-free/thread_pool.cpp)
-add_executable(lock-free-thread-pool ${SOURCES_lock-free-thread-pool})
+add_executable(lock-free-thread-pool ${SOURCES})
+
+target_compile_definitions(lock-free-thread-pool PUBLIC LOCK_FREE)
 
 enable_testing()
 add_subdirectory(tests)

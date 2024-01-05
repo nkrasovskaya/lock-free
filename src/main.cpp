@@ -1,11 +1,17 @@
 #include <iostream>
 
 #include "config.h"
-#include "lock-free/logger.h"
-#include "lock-free/task_generator.h"
-#include "lock-free/thread_pool.h"
+#include "logger.h"
+#include "task_generator.h"
+#include "thread_pool.h"
 
 int main(int argc, char *argv[]) {
+#ifdef LOCK_FREE
+  std::cout << "lock free" << std::endl;
+#else  // LOCK_FREE
+  std::cout << "lock" << std::endl;
+#endif
+
   Config config;
   if (argc <= 1) {
     std::cout << "No config file. Use default variables" << std::endl;
@@ -26,12 +32,10 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  lock_free::ThreadPool threadPool(config.GetThreadsNumber(),
-                                   config.GetTasksBufferSize());
-  lock_free::Logger logger(
-      new lock_free::FileLogAppender(config.GetLogFilePath()),
-      config.GetLogBufferSize());
-  lock_free::TaskGenerator taskGenerator(threadPool, logger);
+  ThreadPool threadPool(config.GetThreadsNumber(), config.GetTasksBufferSize());
+  Logger logger(new FileLogAppender(config.GetLogFilePath()),
+                config.GetLogBufferSize());
+  TaskGenerator taskGenerator(threadPool, logger);
 
   while (true) {
     if (std::cin.get() == '\n') {

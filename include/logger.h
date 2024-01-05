@@ -1,5 +1,5 @@
-#ifndef LOCK_FREE_LOGGER_H
-#define LOCK_FREE_LOGGER_H
+#ifndef LOGGER_H
+#define LOGGER_H
 
 #include <atomic>
 #include <chrono>
@@ -9,9 +9,11 @@
 #include <sstream>
 #include <thread>
 
+#ifdef LOCK_FREE
 #include "lock-free/ring_buffer.h"
-
-namespace lock_free {
+#else  // LOCK_FREE
+#include "lock/ring_buffer.h"
+#endif  // LOCK_FREE
 
 struct LogMessage {
   time_t time;
@@ -36,6 +38,7 @@ class LogAppender {
   LogAppender() = default;
   LogAppender(const LogAppender&) = delete;
   virtual ~LogAppender() {}
+
   virtual bool write(std::string msg) = 0;
 };
 
@@ -60,12 +63,19 @@ class Logger {
   void stop();
 
  private:
-  std::unique_ptr<LogAppender> helper_;
-  RingBuffer<std::unique_ptr<LogMessage>> buffer_;
+  std::unique_ptr<LogAppender> appender_;
+#ifdef LOCK_FREE
+  lock_free::RingBuffer<std::unique_ptr<LogMessage>> buffer_;
+#else   // LOCK_FREE
+  locks::RingBuffer<std::unique_ptr<LogMessage>> buffer_;
 
-  std::atomic_bool need_stop_;
+  std::mutex buff_lock_;
+  std::condition_variable buff_is_not_full_condition_;
+  std::condition_variable buff_is_not_empty_condition_;
+#endif  // LOCK_FREE
+
   std::thread thread;
+  std::atomic_bool need_stop_;
 };
-}  // namespace lock_free
 
-#endif  // LOCK_FREE_LOGGER_H
+#endif  // LOGGER_H
