@@ -11,10 +11,10 @@ class Config {
 
   void Parse(std::istream *is); // throw: std::invalid_argument
 
-  int GetThreadsNumber() const { return threads_number_; }
-  int GetTasksBufferSize() const { return tasks_buffer_size_; }
-  int GetLogBufferSize() const { return log_buffer_size_; }
-  int GetTasksNumber() const { return tasks_number_; }
+  size_t GetThreadsNumber() const { return threads_number_; }
+  size_t GetTasksBufferSize() const { return tasks_buffer_size_; }
+  size_t GetLogBufferSize() const { return log_buffer_size_; }
+  size_t GetTasksNumber() const { return tasks_number_; }
   const std::string &GetLogFilePath() const { return log_file_path_; }
 
  private:
@@ -23,10 +23,10 @@ class Config {
   Config& operator=(const Config &) = delete;
   Config& operator=(Config &&) = delete;
 
-  int threads_number_ = 16;
-  int tasks_buffer_size_ = 128;
-  int log_buffer_size_ = 256;
-  int tasks_number_ = 1000;
+  size_t threads_number_ = 16;
+  size_t tasks_buffer_size_ = 128;
+  size_t log_buffer_size_ = 256;
+  size_t tasks_number_ = 1000;
   std::string log_file_path_;
 
   class ConfigImpl;

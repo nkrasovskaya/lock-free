@@ -49,8 +49,6 @@ void Config::ConfigImpl::Parse(std::istream *is) {
     return;
   }
 
-  std::cout << "Config:\n" << cfg_str << std::endl;
-
   // Parse JSON
   json::value config_json;
   std::string err = json::parse(config_json, cfg_str);
@@ -83,7 +81,7 @@ void Config::ConfigImpl::ParseApp(const json::value &app_json) {
     }
 
     config_->threads_number_ =
-        static_cast<int>(threads_number_json.get<double>());
+        static_cast<size_t>(threads_number_json.get<double>());
   }
 
   auto &tasks_buffer_size_json = app_json.get("tasks_buffer_size");
@@ -93,7 +91,7 @@ void Config::ConfigImpl::ParseApp(const json::value &app_json) {
     }
 
     config_->tasks_buffer_size_ =
-        static_cast<int>(tasks_buffer_size_json.get<double>());
+        static_cast<size_t>(tasks_buffer_size_json.get<double>());
   }
 
   auto &log_buffer_size_json = app_json.get("log_buffer_size");
@@ -103,7 +101,7 @@ void Config::ConfigImpl::ParseApp(const json::value &app_json) {
     }
 
     config_->log_buffer_size_ =
-        static_cast<int>(log_buffer_size_json.get<double>());
+        static_cast<size_t>(log_buffer_size_json.get<double>());
   }
 
   auto &tasks_number_json = app_json.get("tasks_number");
@@ -113,7 +111,7 @@ void Config::ConfigImpl::ParseApp(const json::value &app_json) {
     }
 
     config_->tasks_number_ =
-        static_cast<int>(tasks_number_json.get<double>());
+        static_cast<size_t>(tasks_number_json.get<double>());
   }
 
   auto &log_file_path_json = app_json.get("log_file_path");

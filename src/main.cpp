@@ -32,6 +32,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  std::cout << "Threads number: " << config.GetThreadsNumber() << std::endl;
+  std::cout << "Tasks buffer size: " << config.GetTasksBufferSize()
+            << std::endl;
+  std::cout << "Log buffer size: " << config.GetLogBufferSize() << std::endl;
+  std::cout << "Tasks number: " << config.GetTasksNumber() << std::endl;
+  std::cout << "Log file path: " << config.GetLogFilePath() << std::endl;
+
   ThreadPool threadPool(config.GetThreadsNumber(), config.GetTasksBufferSize());
   Logger logger(new FileLogAppender(config.GetLogFilePath()),
                 config.GetLogBufferSize());
