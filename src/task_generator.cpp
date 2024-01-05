@@ -55,8 +55,6 @@ TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger,
         logger_.addMessage(std::move(log_message));
       });
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
       if (need_stop_) {
         thread_pool_.stop();
         logger_.stop();
