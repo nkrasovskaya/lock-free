@@ -39,13 +39,15 @@ int main(int argc, char *argv[]) {
   std::cout << "Tasks number: " << config.GetTasksNumber() << std::endl;
   std::cout << "Log file path: " << config.GetLogFilePath() << std::endl;
 
+  std::atomic_int task_counter;
+
   auto ts = std::chrono::high_resolution_clock::now();
   {
-    ThreadPool threadPool(config.GetThreadsNumber(),
-                          config.GetTasksBufferSize());
     Logger logger(new FileLogAppender(config.GetLogFilePath()),
                   config.GetLogBufferSize());
-    TaskGenerator taskGenerator(threadPool, logger, config.GetTasksNumber());
+    ThreadPool threadPool(config.GetThreadsNumber(),
+                          config.GetTasksBufferSize());
+    TaskGenerator taskGenerator(threadPool, logger, config.GetTasksNumber(), task_counter);
 
     if (config.GetTasksNumber() == 0) {
       while (true) {
@@ -60,6 +62,8 @@ int main(int argc, char *argv[]) {
   auto te = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> ms_double = te - ts;
   std::cout << "Execution time: " << ms_double << std::endl;
+
+  std::cout << "Tasks number: " << task_counter << std::endl;
 
   return 0;
 }

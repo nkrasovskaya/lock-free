@@ -2,6 +2,8 @@
 #define LOCK_RING_BUFFER_H
 
 #include <atomic>
+#include <cassert>
+#include <condition_variable>
 #include <vector>
 
 namespace locks {
@@ -56,6 +58,63 @@ class RingBuffer {
   std::atomic_bool is_empty_;
 
   std::vector<T> buffer_;
+};
+
+template <typename T>
+class RingBufferThreadSafe {
+ public:
+  RingBufferThreadSafe(size_t buff_size)
+      : buffer_(buff_size), need_stop_(false) {}
+
+  ~RingBufferThreadSafe() {}
+
+  bool push(T&& data) {
+    std::unique_lock<std::mutex> lock(buff_lock_);
+    buff_is_not_full_condition_.wait(lock, [this] {
+      return std::forward<bool>(need_stop_) || !buffer_.full();
+    });
+    if (need_stop_) {
+      return false;
+    }
+
+    bool res = buffer_.push(std::move(data));
+    assert(res);
+
+    buff_is_not_empty_condition_.notify_one();
+
+    return res;
+  }
+
+  bool pop(T& data) {
+    std::unique_lock<std::mutex> lock(buff_lock_);
+    buff_is_not_empty_condition_.wait(lock, [this] {
+      return std::forward<bool>(need_stop_) || !buffer_.empty();
+    });
+    if (need_stop_ && buffer_.empty()) {
+      return false;
+    }
+
+    bool res = buffer_.pop(data);
+    assert(res);
+
+    buff_is_not_full_condition_.notify_one();
+
+    return res;
+  }
+
+  void stop() {
+    need_stop_ = true;
+    buff_is_not_empty_condition_.notify_all();
+    buff_is_not_full_condition_.notify_all();
+  }
+
+ private:
+  RingBuffer<T> buffer_;
+
+  std::atomic_bool need_stop_;
+  std::mutex buff_lock_;
+  std::condition_variable buff_is_not_full_condition_;
+  std::condition_variable buff_is_not_empty_condition_;
 };
 
 }  // namespace locks

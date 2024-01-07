@@ -1,7 +1,6 @@
 #include "task_generator.h"
 
 #include <cmath>
-#include <iostream>
 
 #include "logger.h"
 #include "thread_pool.h"
@@ -25,10 +24,10 @@ double integrate(double a, double b) {
 }  // namespace
 
 TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger,
-                             size_t tasks_num)
+                             size_t tasks_num, std::atomic_int &task_counter)
     : thread_pool_(threadPool),
       logger_(logger),
-      task_counter_(0),
+      task_counter_(task_counter),
       need_stop_(false) {
   thread = std::move(std::thread([this, tasks_num] {
     for (size_t i = 0;
@@ -36,8 +35,9 @@ TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger,
          ++i) {
       double a = static_cast<double>(rand()) / RAND_MAX;
       double b = static_cast<double>(rand()) / RAND_MAX;
-      thread_pool_.addTask([this, a, b] {
+      thread_pool_.addTask([this, a, b, i] {
         ++task_counter_;
+
         auto ts = std::chrono::high_resolution_clock::now();
         double result = integrate(a, b);
         auto te = std::chrono::high_resolution_clock::now();
@@ -48,7 +48,7 @@ TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger,
         log_message->set_time();
         log_message->fname = __FILE__;
         log_message->line_num = __LINE__;
-        log_message->smsg << "a: " << a << ", b: " << b
+        log_message->smsg << "a: " << a << ", b: " << b << ", num: " << i
                           << ", result: " << result
                           << ", execution time: " << ms_double;
 
@@ -56,8 +56,6 @@ TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger,
       });
 
       if (need_stop_) {
-        thread_pool_.stop();
-        logger_.stop();
         break;
       }
     }
@@ -66,9 +64,6 @@ TaskGenerator::TaskGenerator(ThreadPool &threadPool, Logger &logger,
 
 TaskGenerator::~TaskGenerator() {
   thread.join();
-  printCounter();
-}
-
-void TaskGenerator::printCounter() {
-  std::cout << "Tasks number: " << task_counter_ << std::endl;
+  thread_pool_.stop();
+  logger_.stop();
 }

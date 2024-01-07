@@ -9,7 +9,8 @@ class Logger;
 
 class TaskGenerator {
  public:
-  TaskGenerator(ThreadPool &threadPool, Logger &logger, size_t tasks_num);
+  TaskGenerator(ThreadPool &threadPool, Logger &logger, size_t tasks_num,
+                std::atomic_int &task_counter);
 
   TaskGenerator(const TaskGenerator &) = delete;
 
@@ -21,12 +22,10 @@ class TaskGenerator {
   ThreadPool &thread_pool_;
   Logger &logger_;
 
-  std::atomic_int task_counter_;
+  std::atomic_int &task_counter_;
 
   std::atomic_bool need_stop_;
   std::thread thread;
-
-  void printCounter();
 };
 
 #endif  // TASK_GENERATOR_H

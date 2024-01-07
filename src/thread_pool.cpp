@@ -12,18 +12,11 @@ ThreadPool::ThreadPool(size_t numThreads, size_t buff_size)
             return;
           }
         }
-#else // LOCK_FREE
-        {
-          std::unique_lock<std::mutex> lock(mutex_);
-          condition_.wait(lock, [this] {
-            return std::forward<bool>(need_stop_) || !tasks_.empty();
-          });
-          if (need_stop_ && tasks_.empty()) {
-            return;
-          }
-          tasks_.pop(task);
+#else  // LOCK_FREE
+        if (!tasks_.pop(task)) {
+          return;
         }
-#endif // LOCK_FREE
+#endif  // LOCK_FREE
         task();
       }
     });
@@ -31,19 +24,14 @@ ThreadPool::ThreadPool(size_t numThreads, size_t buff_size)
 }
 
 void ThreadPool::stop() {
-  if (!need_stop_) {
     need_stop_ = true;
 #ifndef LOCK_FREE
-    condition_.notify_all();
-#endif // LOCK_FREE
-  }
-}
+    tasks_.stop();
+#endif  // LOCK_FREE
 
-ThreadPool::~ThreadPool() {
-  if (!need_stop_) {
-    stop();
-  }
-
+#ifndef LOCK_FREE
+  tasks_.stop();
+#endif
   for (std::thread &thread : threads_) {
     thread.join();
   }

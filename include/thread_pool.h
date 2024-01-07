@@ -19,31 +19,20 @@ class ThreadPool {
   template <class F, class... Args>
   void addTask(F &&f, Args &&...args) {
     {
-#ifndef LOCK_FREE
-      std::unique_lock<std::mutex> lock(mutex_);
-#endif  // LOCK_FREE
       tasks_.push([f = std::forward<F>(f),
                    args = std::make_tuple(std::forward<Args>(args)...)] {
         std::apply(f, args);
       });
     }
-#ifndef LOCK_FREE
-    condition_.notify_one();
-#endif  // LOCK_FREE
   }
 
   void stop();
-
-  ~ThreadPool();
 
  private:
 #ifdef LOCK_FREE
   lock_free::RingBuffer<std::function<void()>> tasks_;
 #else   // LOCK_FREE
-  locks::RingBuffer<std::function<void()>> tasks_;  
-
-  std::mutex mutex_;
-  std::condition_variable condition_;
+  locks::RingBufferThreadSafe<std::function<void()>> tasks_;  
 #endif  // LOCK_FREE
 
   std::vector<std::thread> threads_;

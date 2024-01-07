@@ -56,7 +56,6 @@ class FileLogAppender final : public LogAppender {
 class Logger {
  public:
   Logger(LogAppender* helper, size_t buff_size);
-  ~Logger();
 
   bool addMessage(std::unique_ptr<LogMessage>&& msg);
 
@@ -67,7 +66,7 @@ class Logger {
 #ifdef LOCK_FREE
   lock_free::RingBuffer<std::unique_ptr<LogMessage>> buffer_;
 #else   // LOCK_FREE
-  locks::RingBuffer<std::unique_ptr<LogMessage>> buffer_;
+  locks::RingBufferThreadSafe<std::unique_ptr<LogMessage>> buffer_;
 
   std::mutex buff_lock_;
   std::condition_variable buff_is_not_full_condition_;
