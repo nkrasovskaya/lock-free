@@ -42,22 +42,31 @@ int main(int argc, char *argv[]) {
   std::atomic_int task_counter;
 
   auto ts = std::chrono::high_resolution_clock::now();
-  {
-    Logger logger(new FileLogAppender(config.GetLogFilePath()),
-                  config.GetLogBufferSize());
-    ThreadPool threadPool(config.GetThreadsNumber(),
-                          config.GetTasksBufferSize());
-    TaskGenerator taskGenerator(threadPool, logger, config.GetTasksNumber(), task_counter);
+  Logger logger(new FileLogAppender(config.GetLogFilePath()),
+                config.GetLogBufferSize());
+  logger.start();
 
-    if (config.GetTasksNumber() == 0) {
-      while (true) {
-        if (std::cin.get() == '\n') {
-          taskGenerator.stop();
-          break;
-        }
+  ThreadPool thread_pool(config.GetThreadsNumber(),
+                         config.GetTasksBufferSize());
+
+  TaskGenerator task_generator(thread_pool, logger, config.GetTasksNumber(),
+                               task_counter);
+  task_generator.start();
+
+  if (config.GetTasksNumber() == 0) {
+    while (true) {
+      if (std::cin.get() == '\n') {
+        task_generator.stop();
+        break;
       }
     }
   }
+
+  task_generator.join();
+  thread_pool.stop();
+  thread_pool.join();
+  logger.stop();
+  logger.join();
 
   auto te = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> ms_double = te - ts;

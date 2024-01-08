@@ -15,6 +15,8 @@
 #include "lock/ring_buffer.h"
 #endif  // LOCK_FREE
 
+#include "runnable.h"
+
 struct LogMessage {
   time_t time;
   std::string fname;
@@ -53,13 +55,13 @@ class FileLogAppender final : public LogAppender {
   std::ofstream log_file_;
 };
 
-class Logger {
+class Logger : public Runnable {
  public:
   Logger(LogAppender* helper, size_t buff_size);
 
   bool addMessage(std::unique_ptr<LogMessage>&& msg);
 
-  void stop();
+  void stop() override;
 
  private:
   std::unique_ptr<LogAppender> appender_;
@@ -73,8 +75,7 @@ class Logger {
   std::condition_variable buff_is_not_empty_condition_;
 #endif  // LOCK_FREE
 
-  std::thread thread;
-  std::atomic_bool need_stop_;
+  void run() override;
 };
 
 #endif  // LOGGER_H

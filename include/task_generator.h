@@ -4,28 +4,31 @@
 #include <atomic>
 #include <thread>
 
+#include "runnable.h"
+
 class ThreadPool;
 class Logger;
 
-class TaskGenerator {
+class TaskGenerator : public Runnable {
  public:
-  TaskGenerator(ThreadPool &threadPool, Logger &logger, size_t tasks_num,
-                std::atomic_int &task_counter);
+  TaskGenerator(ThreadPool &threadPool, Logger &logger, size_t max_tasks_num,
+                std::atomic_int &task_counter)
+      : Runnable(),
+        thread_pool_(threadPool),
+        logger_(logger),
+        max_tasks_num_(max_tasks_num),
+        task_counter_(task_counter) {}
 
   TaskGenerator(const TaskGenerator &) = delete;
-
-  ~TaskGenerator();
-
-  void stop() { need_stop_ = true; }
 
  private:
   ThreadPool &thread_pool_;
   Logger &logger_;
 
+  size_t max_tasks_num_;
   std::atomic_int &task_counter_;
 
-  std::atomic_bool need_stop_;
-  std::thread thread;
+  void run() override;
 };
 
 #endif  // TASK_GENERATOR_H

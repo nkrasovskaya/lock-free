@@ -27,6 +27,7 @@ class ThreadPool {
   }
 
   void stop();
+  void join();
 
  private:
 #ifdef LOCK_FREE

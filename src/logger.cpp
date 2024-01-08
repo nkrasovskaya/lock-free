@@ -29,45 +29,37 @@ bool FileLogAppender::write(std::string msg) {
 }
 
 Logger::Logger(LogAppender *helper, size_t buff_size)
-    : appender_(helper), buffer_(buff_size), need_stop_(false) {
-  thread = std::move(std::thread([this] {
-    std::unique_ptr<LogMessage> msg;
-    while (true) {
-#ifdef LOCK_FREE
-      if (need_stop_) {
-        return;
-      }
-      buffer_.pop(msg);
-#else  // LOCK_FREE
-      if (!buffer_.pop(msg)) {
-        return;
-      }
-
-#endif  // LOCK_FREE
-      appender_->write(serializeLogMeassage(*msg));
-    }
-  }));
-}
-
-void Logger::stop() {
-  need_stop_ = true;
-
-#ifdef LOCK_FREE
-  // Add fake message to exit from read loop
-  std::unique_ptr<LogMessage> log_message(new LogMessage);
-  log_message->set_time();
-  log_message->fname = __FILE__;
-  log_message->line_num = __LINE__;
-  log_message->smsg << "Stopping logger...";
-  addMessage(std::move(log_message));
-#else   // LOCK_FREE
-  buffer_.stop();
-#endif  // LOCK_FREE
-  thread.join();
-}
+    : Runnable(), appender_(helper), buffer_(buff_size) {}
 
 bool Logger::addMessage(std::unique_ptr<LogMessage> &&msg) {
   buffer_.push(std::move(msg));
 
   return true;
+}
+
+void Logger::stop() {
+  Runnable::stop();
+
+#ifndef LOCK_FREE
+  buffer_.stop();
+#endif  // LOCK_FREE
+}
+
+void Logger::run() {
+  std::unique_ptr<LogMessage> msg;
+  while (true) {
+#ifdef LOCK_FREE
+    while (!buffer_.tryPop(msg)) {
+      if (isNeedStop()) {
+        return;
+      }
+    }
+#else  // LOCK_FREE
+    if (!buffer_.pop(msg)) {
+      return;
+    }
+
+#endif  // LOCK_FREE
+    appender_->write(serializeLogMeassage(*msg));
+  }
 }

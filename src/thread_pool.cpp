@@ -12,7 +12,7 @@ ThreadPool::ThreadPool(size_t numThreads, size_t buff_size)
             return;
           }
         }
-#else  // LOCK_FREE
+#else   // LOCK_FREE
         if (!tasks_.pop(task)) {
           return;
         }
@@ -24,14 +24,13 @@ ThreadPool::ThreadPool(size_t numThreads, size_t buff_size)
 }
 
 void ThreadPool::stop() {
-    need_stop_ = true;
-#ifndef LOCK_FREE
-    tasks_.stop();
-#endif  // LOCK_FREE
-
+  need_stop_ = true;
 #ifndef LOCK_FREE
   tasks_.stop();
 #endif
+}
+
+void ThreadPool::join() {
   for (std::thread &thread : threads_) {
     thread.join();
   }
