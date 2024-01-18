@@ -42,7 +42,7 @@ TaskGenerator::TaskGenerator(size_t numThreads, ThreadPool &threadPool,
 
         double a = static_cast<double>(rand()) / RAND_MAX;
         double b = static_cast<double>(rand()) / RAND_MAX;
-        thread_pool_.addTask([this, a, b, tnum] {
+        thread_pool_.AddTask([this, a, b, tnum] {
           ++task_counter_;
 
           auto ts = std::chrono::high_resolution_clock::now();
@@ -60,10 +60,10 @@ TaskGenerator::TaskGenerator(size_t numThreads, ThreadPool &threadPool,
                             << ", result: " << result
                             << ", execution time: " << ms_double;
 
-          logger_.addMessage(std::move(log_message));
+          logger_.AddMessage(std::move(log_message));
         });
 
-        // if (isNeedStop()) {
+        // if (IsNeedStop()) {
         //   break;
         // }
       }
@@ -71,9 +71,9 @@ TaskGenerator::TaskGenerator(size_t numThreads, ThreadPool &threadPool,
   }
 }
 
-void TaskGenerator::stop() { need_stop_ = true; }
+void TaskGenerator::Stop() { need_stop_ = true; }
 
-void TaskGenerator::join() {
+void TaskGenerator::Join() {
   for (std::thread &thread : threads_) {
     thread.join();
   }

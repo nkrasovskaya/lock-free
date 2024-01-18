@@ -15,8 +15,8 @@ class TaskGenerator {
 
   TaskGenerator(const TaskGenerator &) = delete;
 
-  void stop();
-  void join();
+  void Stop();
+  void Join();
 
  private:
   ThreadPool &thread_pool_;

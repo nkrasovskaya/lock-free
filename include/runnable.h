@@ -10,21 +10,21 @@ class Runnable {
   Runnable(const Runnable &) = delete;
   virtual ~Runnable() {}
 
-  void start() {
-    thread = std::move(std::thread([this]() { run(); }));
+  void Start() {
+    thread = std::move(std::thread([this]() { Run(); }));
   }
 
-  virtual void stop() { need_stop_ = true; }
+  virtual void Stop() { need_stop_ = true; }
 
-  virtual void join() {
+  virtual void Join() {
     if (thread.joinable()) {
       thread.join();
     }
   }
 
  protected:
-  virtual void run() = 0;
-  bool isNeedStop() const { return need_stop_; }
+  virtual void Run() = 0;
+  bool IsNeedStop() const { return need_stop_; }
 
  private:
   std::thread thread;

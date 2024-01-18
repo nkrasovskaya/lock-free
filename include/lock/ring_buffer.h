@@ -15,15 +15,15 @@ class RingBuffer {
     buffer_.resize(buff_size);
   }
 
-  bool empty() const { return is_empty_; }
+  bool Empty() const { return is_empty_; }
 
-  bool full() const { return (tail_idx_ + 1) % buffer_.size() == head_idx_; }
+  bool Full() const { return (tail_idx_ + 1) % buffer_.size() == head_idx_; }
 
-  size_t getHeadIdx() const { return head_idx_; }
-  size_t getTailIdx() const { return tail_idx_; }
+  size_t GetHeadIdx() const { return head_idx_; }
+  size_t GetTailIdx() const { return tail_idx_; }
 
-  bool push(T&& data) {
-    if (full()) {
+  bool Enqueue(T&& data) {
+    if (Full()) {
       return false;
     }
     if (is_empty_) {
@@ -38,8 +38,8 @@ class RingBuffer {
     return true;
   }
 
-  bool pop(T& data) {
-    if (empty()) {
+  bool Dequeue(T& data) {
+    if (Empty()) {
       return false;
     }
     data = std::move(buffer_[head_idx_]);
@@ -68,16 +68,16 @@ class RingBufferThreadSafe {
 
   ~RingBufferThreadSafe() {}
 
-  bool push(T&& data) {
+  bool Enqueue(T&& data) {
     std::unique_lock<std::mutex> lock(buff_lock_);
     buff_is_not_full_condition_.wait(lock, [this] {
-      return std::forward<bool>(need_stop_) || !buffer_.full();
+      return std::forward<bool>(need_stop_) || !buffer_.Full();
     });
     if (need_stop_) {
       return false;
     }
 
-    bool res = buffer_.push(std::move(data));
+    bool res = buffer_.Enqueue(std::move(data));
     assert(res);
 
     buff_is_not_empty_condition_.notify_one();
@@ -85,16 +85,16 @@ class RingBufferThreadSafe {
     return res;
   }
 
-  bool pop(T& data) {
+  bool Dequeue(T& data) {
     std::unique_lock<std::mutex> lock(buff_lock_);
     buff_is_not_empty_condition_.wait(lock, [this] {
-      return std::forward<bool>(need_stop_) || !buffer_.empty();
+      return std::forward<bool>(need_stop_) || !buffer_.Empty();
     });
-    if (need_stop_ && buffer_.empty()) {
+    if (need_stop_ && buffer_.Empty()) {
       return false;
     }
 
-    bool res = buffer_.pop(data);
+    bool res = buffer_.Dequeue(data);
     assert(res);
 
     buff_is_not_full_condition_.notify_one();
@@ -102,7 +102,7 @@ class RingBufferThreadSafe {
     return res;
   }
 
-  void stop() {
+  void Stop() {
     need_stop_ = true;
     buff_is_not_empty_condition_.notify_all();
     buff_is_not_full_condition_.notify_all();

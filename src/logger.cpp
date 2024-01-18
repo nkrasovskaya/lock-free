@@ -23,7 +23,7 @@ FileLogAppender::~FileLogAppender() {
   log_file_.close();
 }
 
-bool FileLogAppender::write(std::string msg) {
+bool FileLogAppender::Write(std::string msg) {
   log_file_.write(msg.data(), msg.size());
   return true;
 }
@@ -31,35 +31,35 @@ bool FileLogAppender::write(std::string msg) {
 Logger::Logger(LogAppender *helper, size_t buff_size)
     : Runnable(), appender_(helper), buffer_(buff_size) {}
 
-bool Logger::addMessage(std::unique_ptr<LogMessage> &&msg) {
-  buffer_.push(std::move(msg));
+bool Logger::AddMessage(std::unique_ptr<LogMessage> &&msg) {
+  buffer_.Enqueue(std::move(msg));
 
   return true;
 }
 
-void Logger::stop() {
-  Runnable::stop();
+void Logger::Stop() {
+  Runnable::Stop();
 
 #ifndef LOCK_FREE
-  buffer_.stop();
+  buffer_.Stop();
 #endif  // LOCK_FREE
 }
 
-void Logger::run() {
+void Logger::Run() {
   std::unique_ptr<LogMessage> msg;
   while (true) {
 #ifdef LOCK_FREE
-    while (!buffer_.tryPop(msg)) {
-      if (isNeedStop()) {
+    while (!buffer_.TryDequeue(msg)) {
+      if (IsNeedStop()) {
         return;
       }
     }
 #else  // LOCK_FREE
-    if (!buffer_.pop(msg)) {
+    if (!buffer_.Dequeue(msg)) {
       return;
     }
 
 #endif  // LOCK_FREE
-    appender_->write(serializeLogMeassage(*msg));
+    appender_->Write(serializeLogMeassage(*msg));
   }
 }

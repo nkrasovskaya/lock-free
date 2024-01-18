@@ -17,17 +17,17 @@ class ThreadPool {
   ThreadPool(size_t numThreads, size_t buff_size);
 
   template <class F, class... Args>
-  void addTask(F &&f, Args &&...args) {
+  void AddTask(F &&f, Args &&...args) {
     {
-      tasks_.push([f = std::forward<F>(f),
+      tasks_.Enqueue([f = std::forward<F>(f),
                    args = std::make_tuple(std::forward<Args>(args)...)] {
         std::apply(f, args);
       });
     }
   }
 
-  void stop();
-  void join();
+  void Stop();
+  void Join();
 
  private:
 #ifdef LOCK_FREE

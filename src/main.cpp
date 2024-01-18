@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
   auto ts = std::chrono::high_resolution_clock::now();
   Logger logger(new FileLogAppender(config.GetLogFilePath()),
                 config.GetLogBufferSize());
-  logger.start();
+  logger.Start();
 
   ThreadPool thread_pool(config.GetThreadsNumber(),
                          config.GetTasksBufferSize());
@@ -56,17 +56,17 @@ int main(int argc, char *argv[]) {
   if (config.GetTasksNumber() == 0) {
     while (true) {
       if (std::cin.get() == '\n') {
-        task_generator.stop();
+        task_generator.Stop();
         break;
       }
     }
   }
 
-  task_generator.join();
-  thread_pool.stop();
-  thread_pool.join();
-  logger.stop();
-  logger.join();
+  task_generator.Join();
+  thread_pool.Stop();
+  thread_pool.Join();
+  logger.Stop();
+  logger.Join();
 
   auto te = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> ms_double = te - ts;

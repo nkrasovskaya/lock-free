@@ -41,7 +41,7 @@ class LogAppender {
   LogAppender(const LogAppender&) = delete;
   virtual ~LogAppender() {}
 
-  virtual bool write(std::string msg) = 0;
+  virtual bool Write(std::string msg) = 0;
 };
 
 class FileLogAppender final : public LogAppender {
@@ -49,7 +49,7 @@ class FileLogAppender final : public LogAppender {
   FileLogAppender(std::string file_path);
   ~FileLogAppender();
 
-  bool write(std::string msg) override;
+  bool Write(std::string msg) override;
 
  private:
   std::ofstream log_file_;
@@ -59,9 +59,9 @@ class Logger : public Runnable {
  public:
   Logger(LogAppender* helper, size_t buff_size);
 
-  bool addMessage(std::unique_ptr<LogMessage>&& msg);
+  bool AddMessage(std::unique_ptr<LogMessage>&& msg);
 
-  void stop() override;
+  void Stop() override;
 
  private:
   std::unique_ptr<LogAppender> appender_;
@@ -71,7 +71,7 @@ class Logger : public Runnable {
   locks::RingBufferThreadSafe<std::unique_ptr<LogMessage>> buffer_;
 #endif  // LOCK_FREE
 
-  void run() override;
+  void Run() override;
 };
 
 #endif  // LOGGER_H

@@ -7,13 +7,13 @@ ThreadPool::ThreadPool(size_t numThreads, size_t buff_size)
       while (true) {
         std::function<void()> task;
 #ifdef LOCK_FREE
-        while (!tasks_.tryPop(task)) {
+        while (!tasks_.TryDequeue(task)) {
           if (need_stop_) {
             return;
           }
         }
 #else   // LOCK_FREE
-        if (!tasks_.pop(task)) {
+        if (!tasks_.Dequeue(task)) {
           return;
         }
 #endif  // LOCK_FREE
@@ -23,14 +23,14 @@ ThreadPool::ThreadPool(size_t numThreads, size_t buff_size)
   }
 }
 
-void ThreadPool::stop() {
+void ThreadPool::Stop() {
   need_stop_ = true;
 #ifndef LOCK_FREE
-  tasks_.stop();
+  tasks_.Stop();
 #endif
 }
 
-void ThreadPool::join() {
+void ThreadPool::Join() {
   for (std::thread &thread : threads_) {
     thread.join();
   }
