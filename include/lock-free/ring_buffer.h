@@ -46,7 +46,7 @@ class RingBuffer {
     }
   }
 
-  void releaseWrite() { used_.fetch_add(1, std::memory_order_release); }
+  void releaseWrite() { used_.fetch_add(1, std::memory_order_relaxed); }
 
   bool push(T&& data) {
     size_t widx = acquireWrite();
@@ -98,7 +98,7 @@ class RingBuffer {
     }
   }
 
-  void releaseRead() { free_.fetch_add(1, std::memory_order_release); }
+  void releaseRead() { free_.fetch_add(1, std::memory_order_relaxed); }
 
   bool pop(T& data) {
     size_t widx = acquireRead();
@@ -128,6 +128,9 @@ class RingBuffer {
   std::atomic_int free_;
 
   std::vector<T> buffer_;
+
+  static_assert(std::atomic<size_t>::is_always_lock_free);
+  static_assert(std::atomic<int>::is_always_lock_free);
 };
 
 }  // namespace lock_free
