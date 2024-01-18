@@ -1,20 +1,12 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <atomic>
 #include <chrono>
-#include <condition_variable>
 #include <fstream>
 #include <memory>
 #include <sstream>
-#include <thread>
 
-#ifdef LOCK_FREE
-#include "lock-free/ring_buffer.h"
-#else  // LOCK_FREE
-#include "lock/ring_buffer.h"
-#endif  // LOCK_FREE
-
+#include "queue_types.h"
 #include "runnable.h"
 
 struct LogMessage {
@@ -57,7 +49,7 @@ class FileLogAppender final : public LogAppender {
 
 class Logger : public Runnable {
  public:
-  Logger(LogAppender* helper, size_t buff_size);
+  Logger(LoggerQueue &logger_queue, LogAppender* helper);
 
   bool AddMessage(std::unique_ptr<LogMessage>&& msg);
 
@@ -65,11 +57,8 @@ class Logger : public Runnable {
 
  private:
   std::unique_ptr<LogAppender> appender_;
-#ifdef LOCK_FREE
-  lock_free::RingBuffer<std::unique_ptr<LogMessage>> buffer_;
-#else   // LOCK_FREE
-  locks::RingBufferThreadSafe<std::unique_ptr<LogMessage>> buffer_;
-#endif  // LOCK_FREE
+
+  LoggerQueue &logger_queue_;
 
   void Run() override;
 };

@@ -23,10 +23,10 @@ double integrate(double a, double b) {
 }
 }  // namespace
 
-TaskGenerator::TaskGenerator(size_t numThreads, ThreadPool &threadPool,
+TaskGenerator::TaskGenerator(size_t numThreads, TasksQueue &tasks,
                              Logger &logger, size_t max_tasks_num,
                              std::atomic_int &task_counter)
-    : thread_pool_(threadPool),
+    : tasks_(tasks),
       logger_(logger),
       gen_tasks_(0),
       task_counter_(task_counter),
@@ -42,7 +42,7 @@ TaskGenerator::TaskGenerator(size_t numThreads, ThreadPool &threadPool,
 
         double a = static_cast<double>(rand()) / RAND_MAX;
         double b = static_cast<double>(rand()) / RAND_MAX;
-        thread_pool_.AddTask([this, a, b, tnum] {
+        AddTask([this, a, b, tnum] {
           ++task_counter_;
 
           auto ts = std::chrono::high_resolution_clock::now();

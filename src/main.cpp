@@ -32,7 +32,10 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  std::cout << "Threads number: " << config.GetThreadsNumber() << std::endl;
+  std::cout << "Thread pool threads number: " << config.GetThreadsNumber()
+            << std::endl;
+  std::cout << "Task generator threads number: "
+            << config.GetTaskGeneratorThreadNumber() << std::endl;
   std::cout << "Tasks buffer size: " << config.GetTasksBufferSize()
             << std::endl;
   std::cout << "Log buffer size: " << config.GetLogBufferSize() << std::endl;
@@ -42,15 +45,16 @@ int main(int argc, char *argv[]) {
   std::atomic_int task_counter;
 
   auto ts = std::chrono::high_resolution_clock::now();
-  Logger logger(new FileLogAppender(config.GetLogFilePath()),
-                config.GetLogBufferSize());
+  LoggerQueue logger_queue(config.GetLogBufferSize());
+  Logger logger(logger_queue, new FileLogAppender(config.GetLogFilePath()));
   logger.Start();
 
-  ThreadPool thread_pool(config.GetThreadsNumber(),
-                         config.GetTasksBufferSize());
+  TasksQueue tasks_queue(config.GetTasksBufferSize());
+
+  ThreadPool thread_pool(tasks_queue, config.GetThreadsNumber());
 
   TaskGenerator task_generator(config.GetTaskGeneratorThreadNumber(),
-                               thread_pool, logger, config.GetTasksNumber(),
+                               tasks_queue, logger, config.GetTasksNumber(),
                                task_counter);
 
   if (config.GetTasksNumber() == 0) {

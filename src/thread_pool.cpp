@@ -1,7 +1,7 @@
 #include "thread_pool.h"
 
-ThreadPool::ThreadPool(size_t numThreads, size_t buff_size)
-    : tasks_(buff_size), need_stop_(false) {
+ThreadPool::ThreadPool(TasksQueue &tasks, size_t numThreads)
+    : tasks_(tasks), need_stop_(false) {
   for (size_t i = 0; i < numThreads; ++i) {
     threads_.emplace_back([this, i] {
       while (true) {

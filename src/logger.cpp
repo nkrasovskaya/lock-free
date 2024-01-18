@@ -28,11 +28,11 @@ bool FileLogAppender::Write(std::string msg) {
   return true;
 }
 
-Logger::Logger(LogAppender *helper, size_t buff_size)
-    : Runnable(), appender_(helper), buffer_(buff_size) {}
+Logger::Logger(LoggerQueue &logger_queue, LogAppender *helper)
+    : Runnable(), appender_(helper), logger_queue_(logger_queue) {}
 
 bool Logger::AddMessage(std::unique_ptr<LogMessage> &&msg) {
-  buffer_.Enqueue(std::move(msg));
+  logger_queue_.Enqueue(std::move(msg));
 
   return true;
 }
@@ -41,7 +41,7 @@ void Logger::Stop() {
   Runnable::Stop();
 
 #ifndef LOCK_FREE
-  buffer_.Stop();
+  logger_queue_.Stop();
 #endif  // LOCK_FREE
 }
 
@@ -49,13 +49,13 @@ void Logger::Run() {
   std::unique_ptr<LogMessage> msg;
   while (true) {
 #ifdef LOCK_FREE
-    while (!buffer_.TryDequeue(msg)) {
+    while (!logger_queue_.TryDequeue(msg)) {
       if (IsNeedStop()) {
         return;
       }
     }
 #else  // LOCK_FREE
-    if (!buffer_.Dequeue(msg)) {
+    if (!logger_queue_.Dequeue(msg)) {
       return;
     }
 

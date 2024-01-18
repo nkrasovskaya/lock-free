@@ -5,21 +5,30 @@
 #include <thread>
 #include <vector>
 
-class ThreadPool;
+#include "queue_types.h"
+
 class Logger;
 
 class TaskGenerator {
  public:
-  TaskGenerator(size_t numThreads, ThreadPool &threadPool, Logger &logger,
+  TaskGenerator(size_t numThreads, TasksQueue &tasks, Logger &logger,
                 size_t max_tasks_num, std::atomic_int &task_counter);
 
   TaskGenerator(const TaskGenerator &) = delete;
+
+  template <class F, class... Args>
+  void AddTask(F &&f, Args &&...args) {
+    tasks_.Enqueue([f = std::forward<F>(f),
+                    args = std::make_tuple(std::forward<Args>(args)...)] {
+      std::apply(f, args);
+    });
+  }
 
   void Stop();
   void Join();
 
  private:
-  ThreadPool &thread_pool_;
+  TasksQueue &tasks_;
   Logger &logger_;
 
   std::atomic_size_t gen_tasks_;
