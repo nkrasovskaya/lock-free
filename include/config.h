@@ -12,6 +12,7 @@ class Config {
   void Parse(std::istream *is); // throw: std::invalid_argument
 
   size_t GetThreadsNumber() const { return threads_number_; }
+  size_t GetTaskGeneratorThreadNumber() const { return task_gen_threads_number_; }
   size_t GetTasksBufferSize() const { return tasks_buffer_size_; }
   size_t GetLogBufferSize() const { return log_buffer_size_; }
   size_t GetTasksNumber() const { return tasks_number_; }
@@ -24,6 +25,7 @@ class Config {
   Config& operator=(Config &&) = delete;
 
   size_t threads_number_ = 16;
+  size_t task_gen_threads_number_ = 8;
   size_t tasks_buffer_size_ = 128;
   size_t log_buffer_size_ = 256;
   size_t tasks_number_ = 1000;

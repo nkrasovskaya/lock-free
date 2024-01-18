@@ -49,9 +49,9 @@ int main(int argc, char *argv[]) {
   ThreadPool thread_pool(config.GetThreadsNumber(),
                          config.GetTasksBufferSize());
 
-  TaskGenerator task_generator(thread_pool, logger, config.GetTasksNumber(),
+  TaskGenerator task_generator(config.GetTaskGeneratorThreadNumber(),
+                               thread_pool, logger, config.GetTasksNumber(),
                                task_counter);
-  task_generator.start();
 
   if (config.GetTasksNumber() == 0) {
     while (true) {

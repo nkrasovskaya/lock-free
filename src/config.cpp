@@ -34,6 +34,7 @@ void Config::Parse(std::istream *is) { impl_->Parse(is); }
 //{
 //  "app": {
 //    "threads_number": 16,
+//    "task_gen_threads_number": 8,
 //    "tasks_buffer_size": 128,
 //    "log_buffer_size": 256,
 //    "tasks_number": 1000,
@@ -84,10 +85,21 @@ void Config::ConfigImpl::ParseApp(const json::value &app_json) {
         static_cast<size_t>(threads_number_json.get<double>());
   }
 
+  auto &task_gen_threads_number_json = app_json.get("task_gen_threads_number");
+  if (!task_gen_threads_number_json.is<json::null>()) {
+    if (!task_gen_threads_number_json.is<double>()) {
+      throw std::invalid_argument("Config app task_gen_threads_number must be a number");
+    }
+
+    config_->task_gen_threads_number_ =
+        static_cast<size_t>(task_gen_threads_number_json.get<double>());
+  }
+
   auto &tasks_buffer_size_json = app_json.get("tasks_buffer_size");
   if (!tasks_buffer_size_json.is<json::null>()) {
     if (!tasks_buffer_size_json.is<double>()) {
-      throw std::invalid_argument("Config app tasks_buffer_size must be a number");
+      throw std::invalid_argument(
+          "Config app tasks_buffer_size must be a number");
     }
 
     config_->tasks_buffer_size_ =
@@ -97,7 +109,8 @@ void Config::ConfigImpl::ParseApp(const json::value &app_json) {
   auto &log_buffer_size_json = app_json.get("log_buffer_size");
   if (!log_buffer_size_json.is<json::null>()) {
     if (!log_buffer_size_json.is<double>()) {
-      throw std::invalid_argument("Config app log_buffer_size must be a number");
+      throw std::invalid_argument(
+          "Config app log_buffer_size must be a number");
     }
 
     config_->log_buffer_size_ =

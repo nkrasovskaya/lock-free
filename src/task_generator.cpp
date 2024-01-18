@@ -23,35 +23,58 @@ double integrate(double a, double b) {
 }
 }  // namespace
 
-void TaskGenerator::run() {
-  for (size_t i = 0;
-       i < (max_tasks_num_ == 0 ? std::numeric_limits<size_t>::max()
-                                : max_tasks_num_);
-       ++i) {
-    double a = static_cast<double>(rand()) / RAND_MAX;
-    double b = static_cast<double>(rand()) / RAND_MAX;
-    thread_pool_.addTask([this, a, b, i] {
-      ++task_counter_;
+TaskGenerator::TaskGenerator(size_t numThreads, ThreadPool &threadPool,
+                             Logger &logger, size_t max_tasks_num,
+                             std::atomic_int &task_counter)
+    : thread_pool_(threadPool),
+      logger_(logger),
+      gen_tasks_(0),
+      task_counter_(task_counter),
+      max_tasks_num_(max_tasks_num == 0 ? std::numeric_limits<size_t>::max()
+                                        : max_tasks_num) {
+  for (size_t i = 0; i < numThreads; ++i) {
+    threads_.emplace_back([this] {
+      while (gen_tasks_ < max_tasks_num_) {
+        size_t tnum = gen_tasks_++;
+        auto ts = std::chrono::high_resolution_clock::now();
+        const int sleep_time = rand() % 8;
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
 
-      auto ts = std::chrono::high_resolution_clock::now();
-      double result = integrate(a, b);
-      auto te = std::chrono::high_resolution_clock::now();
+        double a = static_cast<double>(rand()) / RAND_MAX;
+        double b = static_cast<double>(rand()) / RAND_MAX;
+        thread_pool_.addTask([this, a, b, tnum] {
+          ++task_counter_;
 
-      std::chrono::duration<double, std::milli> ms_double = te - ts;
+          auto ts = std::chrono::high_resolution_clock::now();
+          const int sleep_time = rand() % 100;
+          double result = integrate(a, b);
+          auto te = std::chrono::high_resolution_clock::now();
 
-      std::unique_ptr<LogMessage> log_message(new LogMessage);
-      log_message->set_time();
-      log_message->fname = __FILE__;
-      log_message->line_num = __LINE__;
-      log_message->smsg << "a: " << a << ", b: " << b << ", num: " << i
-                        << ", result: " << result
-                        << ", execution time: " << ms_double;
+          std::chrono::duration<double, std::milli> ms_double = te - ts;
 
-      logger_.addMessage(std::move(log_message));
+          std::unique_ptr<LogMessage> log_message(new LogMessage);
+          log_message->set_time();
+          log_message->fname = __FILE__;
+          log_message->line_num = __LINE__;
+          log_message->smsg << "a: " << a << ", b: " << b << ", num: " << tnum
+                            << ", result: " << result
+                            << ", execution time: " << ms_double;
+
+          logger_.addMessage(std::move(log_message));
+        });
+
+        // if (isNeedStop()) {
+        //   break;
+        // }
+      }
     });
+  }
+}
 
-    if (isNeedStop()) {
-      break;
-    }
+void TaskGenerator::stop() { need_stop_ = true; }
+
+void TaskGenerator::join() {
+  for (std::thread &thread : threads_) {
+    thread.join();
   }
 }
