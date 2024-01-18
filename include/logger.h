@@ -69,10 +69,6 @@ class Logger : public Runnable {
   lock_free::RingBuffer<std::unique_ptr<LogMessage>> buffer_;
 #else   // LOCK_FREE
   locks::RingBufferThreadSafe<std::unique_ptr<LogMessage>> buffer_;
-
-  std::mutex buff_lock_;
-  std::condition_variable buff_is_not_full_condition_;
-  std::condition_variable buff_is_not_empty_condition_;
 #endif  // LOCK_FREE
 
   void run() override;
