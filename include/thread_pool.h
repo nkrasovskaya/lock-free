@@ -9,13 +9,14 @@
 
 class ThreadPool {
  public:
-  ThreadPool(TasksQueue &tasks, size_t numThreads);
+  ThreadPool(TasksQueue &tasks, LoggerQueue &logger_queue, size_t numThreads);
 
   void Stop();
   void Join();
 
  private:
   TasksQueue &tasks_;
+  LoggerQueue &logger_queue_;
 
   std::vector<std::thread> threads_;
   std::atomic_bool need_stop_;

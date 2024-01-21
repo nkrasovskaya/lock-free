@@ -1,10 +1,11 @@
 #include "thread_pool.h"
 
-ThreadPool::ThreadPool(TasksQueue &tasks, size_t numThreads)
-    : tasks_(tasks), need_stop_(false) {
+ThreadPool::ThreadPool(TasksQueue &tasks, LoggerQueue &logger_queue, size_t numThreads)
+    : tasks_(tasks), logger_queue_(logger_queue), need_stop_(false) {
   for (size_t i = 0; i < numThreads; ++i) {
     threads_.emplace_back([this, i] {
 #ifdef LOCK_FREE
+      logger_queue_.RegisterThread();
       tasks_.RegisterThread();
 #endif
       while (true) {

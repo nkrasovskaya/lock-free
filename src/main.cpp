@@ -45,18 +45,20 @@ int main(int argc, char *argv[]) {
   std::atomic_int task_counter;
 
   auto ts = std::chrono::high_resolution_clock::now();
-  LoggerQueue logger_queue(config.GetLogBufferSize());
-  Logger logger(logger_queue, new FileLogAppender(config.GetLogFilePath()));
-  logger.Start();
 
 #ifdef LOCK_FREE
+  LoggerQueue logger_queue(config.GetTaskGeneratorThreadNumber() + 1);
   TasksQueue tasks_queue(config.GetThreadsNumber() +
                          config.GetTaskGeneratorThreadNumber());
 #else
+  LoggerQueue logger_queue;
   TasksQueue tasks_queue;
 #endif
 
-  ThreadPool thread_pool(tasks_queue, config.GetThreadsNumber());
+  Logger logger(logger_queue, new FileLogAppender(config.GetLogFilePath()));
+  logger.Start();
+
+  ThreadPool thread_pool(tasks_queue, logger_queue, config.GetThreadsNumber());
 
   TaskGenerator task_generator(config.GetTaskGeneratorThreadNumber(),
                                tasks_queue, logger, config.GetTasksNumber(),

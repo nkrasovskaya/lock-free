@@ -46,6 +46,9 @@ void Logger::Stop() {
 }
 
 void Logger::Run() {
+#ifdef LOCK_FREE
+  logger_queue_.RegisterThread();
+#endif
   std::unique_ptr<LogMessage> msg;
   while (true) {
 #ifdef LOCK_FREE
