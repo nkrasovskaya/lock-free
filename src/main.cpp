@@ -49,7 +49,11 @@ int main(int argc, char *argv[]) {
   Logger logger(logger_queue, new FileLogAppender(config.GetLogFilePath()));
   logger.Start();
 
+#ifdef LOCK_FREE
   TasksQueue tasks_queue(config.GetTasksBufferSize());
+#else
+  TasksQueue tasks_queue;
+#endif
 
   ThreadPool thread_pool(tasks_queue, config.GetThreadsNumber());
 
