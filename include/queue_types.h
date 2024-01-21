@@ -7,8 +7,10 @@ class LogMessage;
 
 #ifdef LOCK_FREE
 #include "lock-free/ring_buffer.h"
+#include "lock-free/linked_queue.h"
 
-typedef lock_free::RingBuffer<std::function<void()>> TasksQueue;
+//typedef lock_free::RingBuffer<std::function<void()>> TasksQueue;
+typedef lock_free::LinkedQueue<std::function<void()>> TasksQueue;
 
 typedef lock_free::RingBuffer<std::unique_ptr<LogMessage>> LoggerQueue;
 #else  // LOCK_FREE

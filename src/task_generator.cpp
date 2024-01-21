@@ -1,6 +1,7 @@
 #include "task_generator.h"
 
 #include <cmath>
+#include <iostream>
 
 #include "logger.h"
 #include "thread_pool.h"
@@ -34,6 +35,9 @@ TaskGenerator::TaskGenerator(size_t numThreads, TasksQueue &tasks,
                                         : max_tasks_num) {
   for (size_t i = 0; i < numThreads; ++i) {
     threads_.emplace_back([this] {
+#ifdef LOCK_FREE
+      tasks_.RegisterThread();
+#endif
       while (gen_tasks_ < max_tasks_num_) {
         size_t tnum = gen_tasks_++;
         auto ts = std::chrono::high_resolution_clock::now();
@@ -63,9 +67,9 @@ TaskGenerator::TaskGenerator(size_t numThreads, TasksQueue &tasks,
           logger_.AddMessage(std::move(log_message));
         });
 
-        // if (IsNeedStop()) {
-        //   break;
-        // }
+        if (need_stop_) {
+          break;
+        }
       }
     });
   }

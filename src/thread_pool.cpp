@@ -4,6 +4,9 @@ ThreadPool::ThreadPool(TasksQueue &tasks, size_t numThreads)
     : tasks_(tasks), need_stop_(false) {
   for (size_t i = 0; i < numThreads; ++i) {
     threads_.emplace_back([this, i] {
+#ifdef LOCK_FREE
+      tasks_.RegisterThread();
+#endif
       while (true) {
         std::function<void()> task;
 #ifdef LOCK_FREE
@@ -17,6 +20,7 @@ ThreadPool::ThreadPool(TasksQueue &tasks, size_t numThreads)
           return;
         }
 #endif  // LOCK_FREE
+        assert(task);
         task();
       }
     });

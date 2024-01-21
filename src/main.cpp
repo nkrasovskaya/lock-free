@@ -50,7 +50,8 @@ int main(int argc, char *argv[]) {
   logger.Start();
 
 #ifdef LOCK_FREE
-  TasksQueue tasks_queue(config.GetTasksBufferSize());
+  TasksQueue tasks_queue(config.GetThreadsNumber() +
+                         config.GetTaskGeneratorThreadNumber());
 #else
   TasksQueue tasks_queue;
 #endif
