@@ -41,7 +41,7 @@ class HazardPointers {
     hp_arr_[hp_map_[tid]][ind] = nullptr;
   }
 
-  void UnrefNode(T* node) {
+  void Retire(T* node) {
     while (unref_count_ >= max_count_ || scan_is_run_) {
       ;
     }
@@ -205,7 +205,7 @@ class LinkedQueue {
     hp_.ReleaseHazardPointer(std::this_thread::get_id(), 0);
     hp_.ReleaseHazardPointer(std::this_thread::get_id(), 1);
 
-    hp_.UnrefNode(head);
+    hp_.Retire(head);
 
     return true;
   }
