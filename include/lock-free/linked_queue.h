@@ -22,6 +22,10 @@ class HazardPointers {
         client_threads_num_(tnum),
         scan_is_run_(false) {}
 
+  ~HazardPointers() {
+    Scan();
+  }
+
   void AddThread(std::thread::id tid) {
     hp_map_.insert({tid, tcount_++});
   }
@@ -107,6 +111,16 @@ class LinkedQueue {
     QueueNode<T>* node = new QueueNode<T>;
     head_.store(node, std::memory_order_release);
     tail_.store(node, std::memory_order_release);
+  }
+
+  ~LinkedQueue() {
+    QueueNode<T>* head = head_.load(std::memory_order_relaxed);
+    QueueNode<T>* tail = tail_.load(std::memory_order_relaxed);
+
+    assert(head == tail);
+    assert(head->next == nullptr);
+
+    delete head_;
   }
 
   void RegisterThread() { hp_.AddThread(std::this_thread::get_id()); }
