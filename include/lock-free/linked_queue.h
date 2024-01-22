@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cassert>
+#include <cstring>
 #include <map>
 #include <set>
 #include <thread>
@@ -20,7 +21,9 @@ class HazardPointers {
   HazardPointers(size_t tnum)
       : max_count_(2 * HP_PER_THREAD * tnum),
         client_threads_num_(tnum),
-        scan_is_run_(false) {}
+        scan_is_run_(false) {
+    memset(hp_arr_, 0, MAX_THREAD_NUM * HP_PER_THREAD * sizeof(T*));
+  }
 
   ~HazardPointers() {
     Scan();
@@ -68,9 +71,6 @@ class HazardPointers {
     }
 
     std::set<T*> plist;
-    size_t new_unref_count = 0;
-    T* new_unref_nodes[max_count_ * 2];
-
     for (auto& p : hp_map_) {
       for (int i = 0; i < HP_PER_THREAD; ++i) {
         if (hp_arr_[p.second][i] != nullptr) {
@@ -79,6 +79,8 @@ class HazardPointers {
       }
     }
 
+    size_t new_unref_count = 0;
+    T* new_unref_nodes[max_count_ * 2];
     for (int i = 0; i < unref_count_; ++i) {
       if (plist.contains(unref_nodes_[i])) {
         new_unref_nodes[new_unref_count++] = unref_nodes_[i];
